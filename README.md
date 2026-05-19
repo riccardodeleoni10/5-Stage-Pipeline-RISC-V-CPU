@@ -36,17 +36,17 @@ Il Branch Target Buffer (BTB) organizza la sua memoria interna memorizzando il `
 L'automa a stati finiti gestisce le transizioni dinamicamente all'interno dello stadio Execute, basandosi sulla cronologia dei salti. Di seguito la Macchina a Stati implementata:
 
 ```text
-         Salto Preso (1)                 Salto Preso (1)
-        ┌───────────────┐               ┌───────────────┐
-        │               │               │               │
-  ┌─────┴─────┐   ┌─────▼─────┐   ┌─────┴─────┐   ┌─────▼─────┐
-  │    MP     ├───►    WMP    │   │    WPT    ├───►     PT    │
-  │ Fortem.   │   │ Debolm.   │   │ Debolm.   │   │ Fortem.   │
-  │ Non Preso │◄──┤ Non Preso │   │ Preso     │◄──┤ Preso     │
-  └─────▲─────┘   └─────┬─────┘   └─────▲─────┘   └─────┬─────┘
-        │               │               │               │
-        └───────────────┘               └───────────────┘
-      Salto Non Preso (0)             Salto Non Preso (0)
+         Salto Preso (1)                  Salto Preso (1)
+        ┌───────────────┐                ┌───────────────┐
+        │               │                │               │
+  ┌─────┴─────┐   ┌─────▼─────┐    ┌─────┴─────┐   ┌─────▼─────┐
+  │    MP     ├───►    WMP    ├───►│    WPT    ├───►     PT    │
+  │ Fortem.   │   │ Debolm.   │    │ Debolm.   │   │ Fortem.   │
+  │ Non Preso │◄──┤ Non Preso │ ◄──┤ Preso     │◄──┤ Preso     │
+  └─────▲─────┘   └─────┬─────┘    └─────▲─────┘   └─────┬─────┘
+        │               │                │               │
+        └───────────────┘                └───────────────┘
+      Salto Non Preso (0)              Salto Non Preso (0)
 
 ```
 * **IF Stage (Predizione Combinatoria):** Il PC corrente interroga istantaneamente il BTB tramite i bit `[7:2]`. Se il Tag coincide con il PC e lo stato è debolmente/fortemente preso (`WPT` o `PT`), il PC successivo viene dirottato verso il target in un solo ciclo di clock.
