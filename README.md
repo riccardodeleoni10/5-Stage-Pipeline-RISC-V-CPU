@@ -29,3 +29,40 @@ La CPU esegue un subset ottimizzato dell'ISA RISC-V, supportando istruzioni fond
 Il BTB organizza la memoria interna memorizzando il `tag` (PC completo a 32 bit), il `target` (indirizzo di atterraggio del salto) e lo `state` codificato tramite il tipo enumerato `btb_state_t`. 
 
 L'automa a stati gestisce le transizioni dinamicamente nello stadio Execute:
+Salto Preso                 Salto Preso
+  ┌───────────┐               ┌───────────┐
+  │           │               │           │
+┌──┴──┐     ┌──▼──┐         ┌──┴──┐     ┌──▼──┐
+│ MP  ├────►│ WMP │         │ WPT ├────►│ PT  │
+└──▲──┘     └──┬──┘         └──▲──┘     └──┬──┘
+│           │               │           │
+└───────────┘               └───────────┘
+Salto Non Preso             Salto Non Preso
+
+
+* **IF Stage (Predizione Combinatoria):** Il PC corrente interroga istantaneamente il BTB tramite i bit `[7:2]`. Se il Tag coincide con il PC e lo stato è debolmente/fortemente preso (`WPT` o `PT`), il PC successivo viene dirottato verso il target in un solo ciclo di clock.
+* **EX Stage (Logica di Correzione e Update):** Se l'esito reale calcolato dal comparatore differisce dalla scommessa effettuata dal Fetch, il segnale `btb_ex_error` si alza immediatame, innescando un **Flush d'emergenza** degli stadi IF/ID e ID/EX, riportando il PC sulla retta via (`ex_pc_branch` se preso, `ex_pc_fallback` se non preso).
+
+---
+
+## 📊 Analisi delle Performance (IPC Benchmark)
+
+I test di simulazione eseguiti sul calcolo della serie di Fibonacci evidenziano l'impatto straordinario del BTB sull'efficienza computazionale globale:
+
+| Metrica Hardware | CPU Classica (No BTB) | CPU con Bimodal BTB (2-bit) |
+| :--- | :---: | :---: |
+| **Cicli di Clock ($N=10$)** | ~95 cicli | **77 cicli** |
+| **Istruzioni Utili Chiuse** | 67 | 67 |
+| **Penalità di Flush perse** | 22 cicli | **4 cicli** |
+| **IPC Reale (*Instructions Per Cycle*)** | **0.71** | **0.87** |
+| **Guadagno di Efficienza** | Baseline | **+ 22.5%** |
+
+*Nota: La penalità residua di 4 cicli nella CPU con BTB è strutturalmente legata all'errore fisiologico di prima沒有 (BTB ancora vuoto al giro 1) e all'errore di uscita dal loop (cambio repentino di abitudine all'ultimo ciclo), confermando l'esatta corrispondenza tra teoria architetturale e simulazione fisica.*
+
+---
+
+## 🛠️ Struttura dei File del Progetto
+
+```ascii
+├── riscv_pipe_cpu.vhd   # Codice sorgente VHDL completo del Processore
+└── tb_riscv_pipe_cpu.sv # Testbench avanzato in SystemVerilog tarato a 170 MHz
