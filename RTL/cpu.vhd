@@ -53,9 +53,9 @@ signal PC_s             : std_logic_vector(31 downto 0) := (others => '0');
 signal PC_next_s        : std_logic_vector(31 downto 0); 
 signal PC_p4_s          : std_logic_vector(31 downto 0); 
 
-signal read_data1_w     : std_logic_vector(31 downto 0);
-signal read_data2_w     : std_logic_vector(31 downto 0);
-signal WB_data_w        : std_logic_vector(31 downto 0); 
+signal read_data1_s     : std_logic_vector(31 downto 0);
+signal read_data2_s     : std_logic_vector(31 downto 0);
+signal WB_data_s        : std_logic_vector(31 downto 0); 
 
 signal instruction      : std_logic_vector(31 downto 0);
 
@@ -184,15 +184,16 @@ signal mem_wb_reg_d, mem_wb_reg_q : mem_wb_reg_t;
 --------------------------------------------------------------------------------
 -- 1-BIT BRANCH PREDICTION LOGIC
 --------------------------------------------------------------------------------
+type btb_state_t is (MP,WMP,WPT,PT);     -- misspreditction,weak-missprediction, weak prediction taken, prediction taken
 type btb_reg_t is record
         tag   : std_logic_vector(31 downto 0);
         target: std_logic_vector(31 downto 0);
-        predict_bit : std_logic;
-end record; -- Aggiunto punto e virgola mancante
+        state : btb_state_t;
+end record; 
 
 type btb_ram_t is array (0 to 63) of btb_reg_t;
-signal btb : btb_ram_t := (others => ( (others=>'0'), (others=>'0'), '0'));
-
+signal btb : btb_ram_t := (others => ( (others=>'0'), (others=>'0'),WPT));
+signal btb_next_state : btb_state_t;
 -- Segnali IF (Fetch)
 signal btb_if_index         : std_logic_vector(5 downto 0); -- Dichiarazione vuota, assegnazione sotto il begin
 signal btb_if_predict_taken : std_logic;
@@ -229,7 +230,7 @@ alias ex_pc          : std_logic_vector(31 downto 0) is id_ex_reg_q.pc;
 alias ex_branch      : std_logic is id_ex_reg_q.branch;
 signal ex_pc_branch    : std_logic_vector(31 downto 0);
 signal ex_zero         : std_logic;
-signal ex_ALU_ctrl_w   : std_logic_vector(3 downto 0);
+signal ex_ALU_ctrl_s   : std_logic_vector(3 downto 0);
 signal ex_alu_mux_out  : std_logic_vector(31 downto 0);
 signal ex_alu_result_s : std_logic_vector(31 downto 0);
 signal ex_alu_in_a     : std_logic_vector(31 downto 0);
@@ -267,7 +268,10 @@ btb_if_index        <= PC_s(7 downto 2);
 btb_ex_update_index <= ex_pc(7 downto 2);
 
 -- FETCH
-btb_if_predict_taken <= btb(to_integer(unsigned(btb_if_index))).predict_bit when btb(to_integer(unsigned(btb_if_index))).tag = PC_s else '0';
+btb_if_predict_taken <= '1' when (btb(to_integer(unsigned(btb_if_index))).tag = PC_s and 
+                               (btb(to_integer(unsigned(btb_if_index))).state = PT or 
+                               btb(to_integer(unsigned(btb_if_index))).state = WPT ))
+                            else '0';
 
 -- EXECUTE
 btb_ex_actual_taken <= ex_zero and ex_branch;
@@ -280,6 +284,38 @@ btb_ex_pc_fallback <= std_logic_vector(unsigned(ex_pc) + to_unsigned(4,32));
 -- se il salto è preso di default passa il branch altrimenti il puntatore all'istruzione successiva 
 btb_ex_pc_correction <= ex_pc_branch when btb_ex_actual_taken = '1' else btb_ex_pc_fallback; 
 
+-- processo combinatorio BTB
+btb_comb_proc: process(all)
+begin
+btb_next_state <= WPT;
+case btb(to_integer(unsigned(btb_ex_update_index))).state is 
+    when PT =>
+        if btb_ex_actual_taken = '1' then 
+            btb_next_state <= PT;
+        else 
+            btb_next_state <= WPT;
+        end if;
+    when WPT => 
+        if btb_ex_actual_taken = '1' then 
+            btb_next_state <= PT;
+        else 
+            btb_next_state <= WMP;
+        end if;
+    when WMP => 
+        if btb_ex_actual_taken = '1' then 
+            btb_next_state <= WPT;
+        else 
+            btb_next_state <= MP;
+        end if;
+    when MP => 
+        if btb_ex_actual_taken = '1' then 
+            btb_next_state <= WPT;
+        else 
+            btb_next_state <= MP;
+        end if;
+    when others => NULL;
+end case;
+end process;
 --------------------------------------------------------------------------------
 -- LOGICA PROGRAM COUNTER E FETCH
 --------------------------------------------------------------------------------
@@ -338,7 +374,7 @@ begin
             if ex_branch = '1' then
                 btb(to_integer(unsigned(btb_ex_update_index))).tag         <= ex_pc;
                 btb(to_integer(unsigned(btb_ex_update_index))).target      <= ex_pc_branch;
-                btb(to_integer(unsigned(btb_ex_update_index))).predict_bit <= btb_ex_actual_taken;
+                btb(to_integer(unsigned(btb_ex_update_index))).state       <= btb_next_state;
             end if;
         end if;
     end if;
