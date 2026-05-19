@@ -195,13 +195,13 @@ type btb_ram_t is array (0 to 63) of btb_reg_t;
 signal btb : btb_ram_t := (others => ( (others=>'0'), (others=>'0'),WPT));
 signal btb_next_state : btb_state_t;
 -- Segnali IF (Fetch)
-signal btb_if_index         : std_logic_vector(5 downto 0); -- Dichiarazione vuota, assegnazione sotto il begin
+signal btb_if_index         : std_logic_vector(5 downto 0); 
 signal btb_if_predict_taken : std_logic;
 
 -- Segnali EX (Execute)
 signal btb_ex_actual_taken   : std_logic;
 signal btb_ex_pc_fallback    : std_logic_vector(31 downto 0);
-signal btb_ex_update_index   : std_logic_vector(5 downto 0); -- Dichiarazione vuota, assegnazione sotto il begin
+signal btb_ex_update_index   : std_logic_vector(5 downto 0);
 signal btb_ex_error         : std_logic;
 signal btb_ex_pc_correction  : std_logic_vector(31 downto 0);
 
@@ -213,7 +213,7 @@ alias id_instr  : std_logic_vector(31 downto 0) is if_id_reg_q.instr;
 alias opcode    : std_logic_vector(6 downto 0)  is id_instr(6 downto 0);
 alias rd        : std_logic_vector(4 downto 0)  is id_instr(11 downto 7);
 alias funct3    : std_logic_vector(2 downto 0)  is id_instr(14 downto 12);
-alias rs1       : std_logic_vector(4 downto 0)  is id_instr(19 downto 15); -- rimossa la 'e' di troppo
+alias rs1       : std_logic_vector(4 downto 0)  is id_instr(19 downto 15);
 alias rs2       : std_logic_vector(4 downto 0)  is id_instr(24 downto 20);
 alias funct7_b5 : std_logic                     is id_instr(30);
 alias id_pc     : std_logic_vector(31 downto 0) is if_id_reg_q.pc;
@@ -327,7 +327,7 @@ begin
     if btb_ex_error = '1' then 
         PC_next_s <= btb_ex_pc_correction;
     elsif btb_if_predict_taken = '1' then 
-        PC_next_s <= btb(to_integer(unsigned(btb_if_index))).target; -- cast corretto
+        PC_next_s <= btb(to_integer(unsigned(btb_if_index))).target;
     else
         PC_next_s <= PC_p4_s;
     end if;
