@@ -29,15 +29,24 @@ La CPU esegue un subset ottimizzato dell'ISA RISC-V, supportando istruzioni fond
 Il BTB organizza la memoria interna memorizzando il `tag` (PC completo a 32 bit), il `target` (indirizzo di atterraggio del salto) e lo `state` codificato tramite il tipo enumerato `btb_state_t`. 
 
 L'automa a stati gestisce le transizioni dinamicamente nello stadio Execute:
-Salto Preso                 Salto Preso
-  ┌───────────┐               ┌───────────┐
-  │           │               │           │
-┌──┴──┐     ┌──▼──┐         ┌──┴──┐     ┌──▼──┐
-│ MP  ├────►│ WMP │         │ WPT ├────►│ PT  │
-└──▲──┘     └──┬──┘         └──▲──┘     └──┬──┘
-│           │               │           │
-└───────────┘               └───────────┘
-Salto Non Preso             Salto Non Preso
+### Il Motore di Predizione a 2 Bit (Bimodal Predictor)
+
+Il Branch Target Buffer (BTB) organizza la sua memoria interna memorizzando il `tag` (PC completo a 32 bit per evitare aliasing), il `target` (indirizzo di destinazione calcolato) e lo `state` (codificato tramite il tipo enumerato `btb_state_t`). 
+
+L'automa a stati finiti gestisce le transizioni dinamicamente all'interno dello stadio Execute, basandosi sulla cronologia dei salti. Di seguito la Macchina a Stati implementata:
+
+```text
+         Salto Preso (1)                 Salto Preso (1)
+        ┌───────────────┐               ┌───────────────┐
+        │               │               │               │
+  ┌─────┴─────┐   ┌─────▼─────┐   ┌─────┴─────┐   ┌─────▼─────┐
+  │    MP     ├───►    WMP    │   │    WPT    ├───►     PT    │
+  │ Fortem.   │   │ Debolm.   │   │ Debolm.   │   │ Fortem.   │
+  │ Non Preso │◄──┤ Non Preso │   │ Preso     │◄──┤ Preso     │
+  └─────▲─────┘   └─────┬─────┘   └─────▲─────┘   └─────┬─────┘
+        │               │               │               │
+        └───────────────┘               └───────────────┘
+      Salto Non Preso (0)             Salto Non Preso (0)
 
 
 * **IF Stage (Predizione Combinatoria):** Il PC corrente interroga istantaneamente il BTB tramite i bit `[7:2]`. Se il Tag coincide con il PC e lo stato è debolmente/fortemente preso (`WPT` o `PT`), il PC successivo viene dirottato verso il target in un solo ciclo di clock.
@@ -56,8 +65,6 @@ I test di simulazione eseguiti sul calcolo della serie di Fibonacci evidenziano 
 | **Penalità di Flush perse** | 22 cicli | **4 cicli** |
 | **IPC Reale (*Instructions Per Cycle*)** | **0.71** | **0.87** |
 | **Guadagno di Efficienza** | Baseline | **+ 22.5%** |
-
-*Nota: La penalità residua di 4 cicli nella CPU con BTB è strutturalmente legata all'errore fisiologico di prima沒有 (BTB ancora vuoto al giro 1) e all'errore di uscita dal loop (cambio repentino di abitudine all'ultimo ciclo), confermando l'esatta corrispondenza tra teoria architetturale e simulazione fisica.*
 
 ---
 
