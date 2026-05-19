@@ -1,6 +1,7 @@
-readme_text = """# RISC-V 5-Stage Pipelined CPU with 2-bit Bimodal BTB"""
+readme_text = """# RISC-V 5-Stage Pipelined Core with 2-Bit Bimodal BTB
 
-Benvenuto nel repository di **riscv_pipe_cpu**, un core di processore RISC-V a 5 stadi interamente sviluppato in VHDL. L'architettura implementa tecniche avanzate di esecuzione speculativa tramite un predittore di salto bimodale a 2 bit (*Branch Target Buffer*).
+Benvenuto nel repository di **riscv_pipe_cpu**, un core di processore RISC-V a 5 stadi interamente sviluppato in VHDL. L'architettura implementa tecniche avanzate di esecuzione speculativa tramite un predittore di salto bimodale a 2 bit (*Branch Target Buffer*), ottimizzando significativamente l'efficienza di esecuzione ed eliminando i colli di bottiglia strutturali.
+"""
 
 <p align="center">
   <img width="1827" height="843" alt="Schema dell'Architettura della CPU" src="https://github.com/user-attachments/assets/e48eaecd-233d-4e10-ae33-a6e2d8db5530" />
