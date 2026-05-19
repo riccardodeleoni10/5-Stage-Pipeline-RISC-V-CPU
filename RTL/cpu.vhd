@@ -53,9 +53,9 @@ signal PC_s             : std_logic_vector(31 downto 0) := (others => '0');
 signal PC_next_s        : std_logic_vector(31 downto 0); 
 signal PC_p4_s          : std_logic_vector(31 downto 0); 
 
-signal read_data1_s     : std_logic_vector(31 downto 0);
-signal read_data2_s     : std_logic_vector(31 downto 0);
-signal WB_data_s        : std_logic_vector(31 downto 0); 
+signal read_data1_w     : std_logic_vector(31 downto 0);
+signal read_data2_w     : std_logic_vector(31 downto 0);
+signal WB_data_w        : std_logic_vector(31 downto 0); 
 
 signal instruction      : std_logic_vector(31 downto 0);
 
@@ -229,7 +229,7 @@ alias ex_pc          : std_logic_vector(31 downto 0) is id_ex_reg_q.pc;
 alias ex_branch      : std_logic is id_ex_reg_q.branch;
 signal ex_pc_branch    : std_logic_vector(31 downto 0);
 signal ex_zero         : std_logic;
-signal ex_ALU_ctrl_s   : std_logic_vector(3 downto 0);
+signal ex_ALU_ctrl_w   : std_logic_vector(3 downto 0);
 signal ex_alu_mux_out  : std_logic_vector(31 downto 0);
 signal ex_alu_result_s : std_logic_vector(31 downto 0);
 signal ex_alu_in_a     : std_logic_vector(31 downto 0);
