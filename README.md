@@ -48,7 +48,7 @@ L'automa a stati finiti gestisce le transizioni dinamicamente all'interno dello 
         └───────────────┘               └───────────────┘
       Salto Non Preso (0)             Salto Non Preso (0)
 
-
+```
 * **IF Stage (Predizione Combinatoria):** Il PC corrente interroga istantaneamente il BTB tramite i bit `[7:2]`. Se il Tag coincide con il PC e lo stato è debolmente/fortemente preso (`WPT` o `PT`), il PC successivo viene dirottato verso il target in un solo ciclo di clock.
 * **EX Stage (Logica di Correzione e Update):** Se l'esito reale calcolato dal comparatore differisce dalla scommessa effettuata dal Fetch, il segnale `btb_ex_error` si alza immediatame, innescando un **Flush d'emergenza** degli stadi IF/ID e ID/EX, riportando il PC sulla retta via (`ex_pc_branch` se preso, `ex_pc_fallback` se non preso).
 
@@ -65,7 +65,6 @@ I test di simulazione eseguiti sul calcolo della serie di Fibonacci evidenziano 
 | **Penalità di Flush perse** | 22 cicli | **4 cicli** |
 | **IPC Reale (*Instructions Per Cycle*)** | **0.71** | **0.87** |
 | **Guadagno di Efficienza** | Baseline | **+ 22.5%** |
-
 ---
 
 ## 🛠️ Struttura dei File del Progetto
